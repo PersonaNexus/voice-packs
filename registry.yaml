@@ -1,0 +1,72 @@
+# PersonaNexus Voice Pack Registry
+# Index of all available personality adapters
+
+version: "0.1"
+base_model: HuggingFaceTB/SmolLM2-360M
+framework: mlx-lm
+adapter_type: lora
+
+packs:
+  aquinas:
+    name: St. Thomas Aquinas
+    status: trained
+    category: philosophy-theology
+    style: Systematic, scholastic, Q&A structure
+    corpus_words: 547000
+    training_iters: 1000
+    eval_repetition: 0.406
+    eval_vocab_richness: 0.430
+    eval_theological_density: 0.061
+    notes: "High theological density but repetition issues from NewAdvent HTML artifacts. Data cleaning recommended."
+
+  augustine:
+    name: St. Augustine of Hippo
+    status: trained
+    category: philosophy-theology
+    style: Introspective, rhetorical, narrative
+    corpus_words: 554000
+    training_iters: 1000
+    eval_repetition: 0.147
+    eval_vocab_richness: 0.505
+    eval_theological_density: 0.034
+    notes: "Best overall quality. Lowest repetition, highest vocab richness. Strong cross-domain transfer."
+
+  chesterton:
+    name: G.K. Chesterton
+    status: trained
+    category: philosophy-theology
+    style: Witty, paradoxical, accessible prose
+    corpus_words: 332000
+    training_iters: 1000
+    eval_repetition: 0.217
+    eval_vocab_richness: 0.487
+    eval_theological_density: 0.031
+    notes: "Most consistent voice across categories. Excellent cross-domain transfer to modern topics."
+
+  newman:
+    name: John Henry Newman
+    status: planned
+    category: philosophy-theology
+    style: Careful, apologetic, developmental
+    corpus_source: "Gutenberg: Apologia, Development of Doctrine"
+
+  john-of-the-cross:
+    name: St. John of the Cross
+    status: planned
+    category: spirituality
+    style: Mystical, poetic, contemplative
+    corpus_source: "NewAdvent: Dark Night, Ascent of Mount Carmel"
+
+  teresa-avila:
+    name: St. Teresa of Avila
+    status: planned
+    category: spirituality
+    style: Practical mysticism, direct, warm
+    corpus_source: "NewAdvent: Interior Castle, Way of Perfection"
+
+  francis-de-sales:
+    name: St. Francis de Sales
+    status: planned
+    category: spirituality
+    style: Gentle, pastoral, devotional
+    corpus_source: "Gutenberg: Introduction to the Devout Life"
