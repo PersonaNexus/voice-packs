@@ -36,5 +36,5 @@
     "test": false,
     "test_batches": 500,
     "train": true,
-    "val_batches": 5
+    "val_batches": 3
 }
