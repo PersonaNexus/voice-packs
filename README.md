@@ -87,6 +87,30 @@ interaction:
   mode: systematic-analysis
 ```
 
+## Audit and Status Reporting
+
+Use the repo audit to see what is actually ready, what assets are missing, and whether `registry.yaml` still matches each pack's own metadata.
+
+```bash
+# Human-readable audit
+python train_pack.py --report
+
+# Machine-readable output for tooling / CI
+python train_pack.py --report --json
+
+# Fail fast if mismatches or missing required trained-pack assets are found
+python train_pack.py --report --strict
+```
+
+The audit checks, for each pack:
+- registry status and category
+- corpus size and evaluation metrics when available
+- presence of `voice-pack.yaml`
+- presence of adapter weights, eval artifacts, and sample artifacts
+- metadata mismatches between `registry.yaml` and the pack-local YAML
+
+This gives PersonaNexus a lightweight operational health view, not just a marketing list.
+
 ## Training Your Own
 
 ```bash
