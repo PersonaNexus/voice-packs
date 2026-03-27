@@ -17,21 +17,45 @@ Unlike system prompts, voice packs modify the model's weights — producing deep
 
 | Pack | Author | Style | Corpus | Status |
 |------|--------|-------|--------|--------|
-| `aquinas` | St. Thomas Aquinas | Systematic, scholastic, Q&A articles | Summa Theologica (547K words) | Trained |
-| `augustine` | St. Augustine | Introspective, rhetorical, narrative | Confessions, City of God, On the Trinity (554K words) | Trained |
-| `chesterton` | G.K. Chesterton | Witty, paradoxical, accessible | Orthodoxy, Heretics, Everlasting Man (332K words) | Trained |
-| `newman` | John Henry Newman | Careful, apologetic, developmental | Apologia, Development of Doctrine | Planned |
-| `john-of-the-cross` | St. John of the Cross | Mystical, poetic, contemplative | Dark Night, Ascent of Mount Carmel | Planned |
-| `teresa-avila` | St. Teresa of Avila | Practical mysticism, direct, warm | Interior Castle, Way of Perfection | Planned |
-| `francis-de-sales` | St. Francis de Sales | Gentle, pastoral, devotional | Introduction to the Devout Life | Planned |
-| `cs-lewis` | C.S. Lewis | Analogical, clear, imaginative | *(requires public domain sources)* | Planned |
+| `aquinas` | St. Thomas Aquinas | Systematic, scholastic, Q&A articles | Summa Theologica (547K words) | **Trained** |
+| `augustine` | St. Augustine | Introspective, rhetorical, narrative | Confessions, City of God, On the Trinity (554K words) | **Trained** |
+| `chesterton` | G.K. Chesterton | Witty, paradoxical, accessible | Orthodoxy, Heretics, Everlasting Man (332K words) | **Trained** |
+| `newman` | John Henry Newman | Careful, apologetic, developmental | Apologia, Development of Doctrine (198K words) | **Trained** |
+| `john-of-the-cross` | St. John of the Cross | Mystical, poetic, contemplative | Dark Night, Ascent of Mount Carmel (66K words) | Experimental |
+| `teresa-avila` | St. Teresa of Avila | Practical mysticism, direct, warm | Interior Castle, Way of Perfection (76K words) | Experimental |
+| `francis-de-sales` | St. Francis de Sales | Gentle, pastoral, devotional | Introduction to the Devout Life, Treatise on Love of God (62K words) | Experimental |
 
-### Planned Categories
+### Classical Philosophy
 
-- **Classical Philosophy**: Plato, Aristotle, Seneca, Marcus Aurelius
-- **Modern Theology**: Ratzinger/Benedict XVI, Hans Urs von Balthasar, Henri de Lubac
-- **Spirituality**: Ignatius of Loyola, Brother Lawrence, Thomas Merton
-- **Apologetics**: Frank Sheed, Peter Kreeft, Scott Hahn
+| Pack | Author | Style | Corpus | Status |
+|------|--------|-------|--------|--------|
+| `plato` | Plato (Jowett trans.) | Dialogic, Socratic questioning | Republic, Symposium, Apology, Phaedo (304K words) | **Trained** |
+| `marcus-aurelius` | Marcus Aurelius | Stoic, aphoristic, meditative | Meditations (112K words) | **Trained** |
+| `seneca` | Seneca | Practical philosophy, epistolary | Letters to Lucilius, On the Shortness of Life (114K words) | **Trained** |
+
+### Literary Fiction
+
+| Pack | Author | Style | Corpus | Status |
+|------|--------|-------|--------|--------|
+| `hemingway` | Ernest Hemingway | Sparse, declarative, dialogue-heavy | A Farewell to Arms, The Sun Also Rises (93K words) | **Trained** |
+| `austen` | Jane Austen | Regency social, character-driven | Pride and Prejudice, Emma, Sense and Sensibility (404K words) | **Trained** |
+| `tolkien-adjacent` | Lord Dunsany / William Morris | Archaic fantasy, epic prose | King of Elfland's Daughter, Well at World's End (262K words) | **Trained** |
+
+### Historical
+
+| Pack | Author | Style | Corpus | Status |
+|------|--------|-------|--------|--------|
+| `lincoln` | Abraham Lincoln | Eloquent, principled, plainspoken | Collected Writings Vols 1-7 (885K words) | **Trained** |
+| `shakespeare` | William Shakespeare | Poetic, dramatic, iambic | Complete Works (935K words) | **Trained** |
+| `dickens` | Charles Dickens | Vivid, satirical, ornate | 7 novels (1.5M words) | **Trained** |
+
+**13 trained voice packs** across 4 categories. Adapters hosted on [HuggingFace](https://huggingface.co/jcrowan3/voice-pack-adapters).
+
+### Future Packs
+
+- **C.S. Lewis** — requires public domain sources (copyright varies by country)
+- **Dostoevsky** — Constance Garnett translations on Gutenberg
+- **Aristotle** — available via Gutenberg translations
 
 ## Voice Pack Structure
 
@@ -53,18 +77,23 @@ voice-packs/
     └── ...
 ```
 
-## Evaluation Results (SmolLM2-360M)
+## Evaluation Results
 
-From our systematic evaluation (60 generations, 5 categories, 15 prompts):
+From 900+ generations with statistical significance (5 runs per condition, two model sizes):
 
-| Voice | Repetition ↓ | Vocab Richness ↑ | Theological Density | Best For |
-|-------|-------------|-------------------|-------------------|----------|
-| Base (no pack) | 0.261 | 0.491 | 0.042 | Generic text |
-| Augustine | **0.147** | **0.505** | 0.034 | Reflective, narrative theology |
-| Chesterton | 0.217 | 0.487 | 0.031 | Apologetics, accessible writing |
-| Aquinas | 0.406 | 0.430 | **0.061** | Systematic theology *(needs data cleaning)* |
+| Voice | Repetition ↓ | Vocab Richness ↑ | Best For |
+|-------|-------------|-------------------|----------|
+| Base (no pack) | 0.237 | 0.482 | Generic text |
+| **Newman** | **0.124** | **0.573** | Measured academic writing |
+| Augustine | 0.192 | 0.469 | Reflective, narrative theology |
+| Chesterton | 0.238 | 0.473 | Apologetics, accessible writing |
+| Aquinas | 0.213 (1.7B) | 0.517 (1.7B) | Systematic theology |
 
-Key finding: Voice packs reduce personality drift by up to 44% compared to the base model.
+**Key findings:**
+- LoRA adapters beat prompt-only baselines in **6/8 comparisons**
+- Up to **49% less personality drift** over long generation
+- **Adapter blending** creates hybrid personalities better than either source
+- Cross-domain validated across theology, classical philosophy, and literary fiction
 
 ## Usage with PersonaNexus
 
