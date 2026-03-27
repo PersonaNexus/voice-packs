@@ -75,3 +75,33 @@ packs:
     category: spirituality
     style: Gentle, pastoral, devotional
     corpus_source: "Gutenberg: Introduction to the Devout Life"
+
+  lincoln:
+    name: Abraham Lincoln
+    status: trained
+    category: political-rhetoric
+    style: Eloquent, principled, frontier plainspoken
+    corpus_words: 885000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Speeches, Letters, Writings Vols 1-7"
+    notes: "Strong corpus from 7-volume collected writings. Some repetition at low temp — use temp >= 0.8 for best results."
+
+  shakespeare:
+    name: William Shakespeare
+    status: trained
+    category: literary-drama
+    style: Poetic, dramatic, iambic, richly metaphorical
+    corpus_words: 935000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Complete Works"
+    notes: "Full Complete Works corpus. Dramatic dialogue style comes through well. Some repetition at low temp."
+
+  dickens:
+    name: Charles Dickens
+    status: trained
+    category: literary-fiction
+    style: Vivid, social, satirical, ornate prose
+    corpus_words: 1505000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Tale of Two Cities, Great Expectations, David Copperfield, Pickwick Papers, Oliver Twist, Christmas Carol, Bleak House"
+    notes: "Largest corpus (1.5M words, 7 novels). Best quality of the three — vivid Dickensian prose with strong character voice. Best val loss improvement."

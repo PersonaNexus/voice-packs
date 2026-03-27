@@ -1,0 +1,10 @@
+# Adapter weights go on HuggingFace Hub, not GitHub
+*.safetensors
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store

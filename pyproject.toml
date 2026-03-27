@@ -1,0 +1,12 @@
+[project]
+name = "voice-pack-api"
+version = "0.1.0"
+description = "PersonaNexus Voice Pack API Server — adapter-aware inference"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "mlx-lm>=0.31.1",
+    "pyyaml>=6.0",
+]
