@@ -45,10 +45,15 @@ packs:
 
   newman:
     name: John Henry Newman
-    status: planned
+    status: trained
     category: philosophy-theology
     style: Careful, apologetic, developmental
-    corpus_source: "Gutenberg: Apologia, Development of Doctrine"
+    corpus_words: 198000
+    training_iters: 1000
+    eval_repetition: 0.124
+    eval_vocab_richness: 0.573
+    eval_theological_density: 0.036
+    notes: "Lowest repetition of all packs. Best overall quality metrics."
 
   john-of-the-cross:
     name: St. John of the Cross

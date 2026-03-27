@@ -1,0 +1,20 @@
+{
+  "model": "SmolLM2-360M",
+  "n_samples": 50,
+  "repetition": {
+    "mean": 0.1917,
+    "std": 0.1025
+  },
+  "vocab_richness": {
+    "mean": 0.4691,
+    "std": 0.0718
+  },
+  "theological_density": {
+    "mean": 0.0325,
+    "std": 0.0312
+  },
+  "model_1.7b": {
+    "repetition_mean": 0.139,
+    "vocab_richness_mean": 0.5435
+  }
+}
