@@ -4,6 +4,12 @@ Weight-level personality modules for language models. Each voice pack is a LoRA 
 
 Unlike system prompts, voice packs modify the model's weights — producing deeper personality transfer that resists drift over long conversations.
 
+**Part of the PersonaNexus ecosystem:**
+- [PersonaNexus](https://github.com/PersonaNexus/personanexus) — declarative agent identity framework
+- [AgentSkillFactory](https://github.com/PersonaNexus/AgentSkillFactory) — auto-generate agent identities from job descriptions
+- **Voice Packs** (this repo) — weight-level personality adapters
+- [Adapter Weights on HuggingFace](https://huggingface.co/jcrowan3/voice-pack-adapters) — pre-trained adapters for 13 voices
+
 ## How It Works
 
 1. A **base model** (e.g., SmolLM2-360M) provides general language ability

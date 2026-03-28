@@ -105,3 +105,33 @@ packs:
     training_iters: 1000
     corpus_source: "Gutenberg: Tale of Two Cities, Great Expectations, David Copperfield, Pickwick Papers, Oliver Twist, Christmas Carol, Bleak House"
     notes: "Largest corpus (1.5M words, 7 novels). Best quality of the three — vivid Dickensian prose with strong character voice. Best val loss improvement."
+
+  twain:
+    name: Mark Twain
+    status: trained
+    category: humor
+    style: Dry wit, frontier humor, social satire
+    corpus_words: 856000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Tom Sawyer, Huck Finn, Connecticut Yankee, Roughing It, Innocents Abroad, and more"
+    notes: "Val loss 3.151 -> 2.941. Strong satirical voice."
+
+  wilde:
+    name: Oscar Wilde
+    status: trained
+    category: humor
+    style: Razor-sharp epigrams, witty social commentary
+    corpus_words: 274000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Dorian Gray, Importance of Being Earnest, De Profundis, plays, essays"
+    notes: "Val loss 3.024 -> 2.786. Best training of the humor batch — strong epigrammatic style despite smaller corpus."
+
+  wodehouse:
+    name: P.G. Wodehouse
+    status: trained
+    category: humor
+    style: Absurdist British comedy, elaborate metaphors
+    corpus_words: 691000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Right Ho Jeeves, My Man Jeeves, Psmith, A Damsel in Distress, and more"
+    notes: "Val loss 3.006 -> 2.700. Best val loss improvement of the humor batch."
