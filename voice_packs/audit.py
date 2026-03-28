@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 from typing import Any
 
 try:
@@ -28,25 +27,11 @@ _DEFAULT_REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 
 
 def load_yaml(path: str) -> dict[str, Any]:
-    """Load a YAML file, falling back to Ruby if PyYAML is unavailable."""
-    if yaml is not None:
-        with open(path) as f:
-            return yaml.safe_load(f) or {}
-
-    ruby = subprocess.run(
-        [
-            "/usr/bin/ruby",
-            "-rjson",
-            "-ryaml",
-            "-e",
-            "print JSON.dump(YAML.load_file(ARGV[0]) || {})",
-            path,
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return json.loads(ruby.stdout or "{}")
+    """Load a YAML file safely."""
+    if yaml is None:
+        raise ImportError("PyYAML is required: pip install pyyaml")
+    with open(path) as f:
+        return yaml.safe_load(f) or {}
 
 
 def load_registry(registry_path: str = _DEFAULT_REGISTRY) -> dict[str, Any]:

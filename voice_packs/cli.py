@@ -4,19 +4,24 @@ import argparse
 import os
 import sys
 
+from voice_packs.paths import validate_path, validate_output_path
+
 
 def cmd_train(args):
     """Train a voice pack from a corpus directory."""
     from voice_packs.prepare import prepare_corpus
     from voice_packs.train import train
 
+    corpus_path = validate_path(args.corpus, must_exist=True)
+    output_path = validate_output_path(args.output)
+
     # Prepare data
-    data_dir = os.path.join(args.output, "data")
-    print(f"=== Preparing corpus from {args.corpus} ===\n")
-    stats = prepare_corpus(args.corpus, data_dir, chunk_size=args.chunk_size)
+    data_dir = os.path.join(output_path, "data")
+    print(f"=== Preparing corpus from {corpus_path} ===\n")
+    stats = prepare_corpus(corpus_path, data_dir, chunk_size=args.chunk_size)
 
     # Train
-    adapter_dir = os.path.join(args.output, "adapters")
+    adapter_dir = os.path.join(output_path, "adapters")
     print(f"\n=== Training voice pack '{args.name}' ===\n")
     success = train(
         data_dir=data_dir,
@@ -42,8 +47,9 @@ def cmd_generate(args):
     """Generate text with a voice pack."""
     from voice_packs.generate import generate
 
+    pack_path = validate_path(args.pack, must_exist=True)
     text = generate(
-        adapter_path=args.pack,
+        adapter_path=pack_path,
         prompt=args.prompt,
         model=args.model,
         max_tokens=args.max_tokens,
@@ -57,9 +63,11 @@ def cmd_blend(args):
     from voice_packs.blend import blend
     from voice_packs.generate import generate
 
-    blend_dir = args.output or os.path.join(os.getcwd(), "blended-adapter")
-    print(f"Blending {args.pack_a} ({args.ratio:.0%}) + {args.pack_b} ({1-args.ratio:.0%})...")
-    blend(args.pack_a, args.pack_b, blend_dir, args.ratio)
+    pack_a = validate_path(args.pack_a, must_exist=True)
+    pack_b = validate_path(args.pack_b, must_exist=True)
+    blend_dir = validate_output_path(args.output) if args.output else os.path.join(os.getcwd(), "blended-adapter")
+    print(f"Blending {pack_a} ({args.ratio:.0%}) + {pack_b} ({1-args.ratio:.0%})...")
+    blend(pack_a, pack_b, blend_dir, args.ratio)
     print(f"Blended adapter saved to {blend_dir}")
 
     if args.prompt:

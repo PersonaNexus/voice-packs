@@ -179,7 +179,6 @@ class CompletionResponse(BaseModel):
 class VoiceInfo(BaseModel):
     id: str
     name: str
-    adapter_path: str
     status: str = "loaded"
 
 
@@ -192,7 +191,7 @@ class VoiceListResponse(BaseModel):
 async def list_voices() -> VoiceListResponse:
     """List all available voice packs."""
     voices = [
-        VoiceInfo(id=name, name=name, adapter_path=path)
+        VoiceInfo(id=name, name=name)
         for name, path in _state["voices"].items()
     ]
     return VoiceListResponse(voices=voices, active_voice=_state["current_voice"])
