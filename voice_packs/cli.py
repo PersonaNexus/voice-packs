@@ -12,13 +12,24 @@ def cmd_train(args):
     from voice_packs.prepare import prepare_corpus
     from voice_packs.train import train
 
-    corpus_path = validate_path(args.corpus, must_exist=True)
     output_path = validate_output_path(args.output)
-
-    # Prepare data
     data_dir = os.path.join(output_path, "data")
-    print(f"=== Preparing corpus from {corpus_path} ===\n")
-    stats = prepare_corpus(corpus_path, data_dir, chunk_size=args.chunk_size)
+
+    if args.corpus.startswith("http://") or args.corpus.startswith("https://"):
+        # URL mode: download from one or more URLs
+        from voice_packs.prepare import ingest_urls, clean_text, chunk_text, write_splits
+        print(f"=== Downloading corpus from URL ===\n")
+        urls = [u.strip() for u in args.corpus.split(",")]
+        raw = ingest_urls(urls)
+        cleaned = clean_text(raw)
+        chunks = chunk_text(cleaned, args.chunk_size)
+        counts = write_splits(chunks, data_dir)
+        stats = {"word_count": len(cleaned.split()), "chunk_count": len(chunks), "splits": counts}
+        print(f"Corpus: {stats['word_count']:,} words, {stats['chunk_count']} chunks")
+    else:
+        corpus_path = validate_path(args.corpus, must_exist=True)
+        print(f"=== Preparing corpus from {corpus_path} ===\n")
+        stats = prepare_corpus(corpus_path, data_dir, chunk_size=args.chunk_size)
 
     # Train
     adapter_dir = os.path.join(output_path, "adapters")

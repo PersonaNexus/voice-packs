@@ -4,7 +4,59 @@ import json
 import os
 import random
 import re
+import urllib.request
 from pathlib import Path
+
+
+def fetch_url(url: str, retries: int = 3) -> str | None:
+    """Fetch a URL with retries. Returns text content or None."""
+    headers = {"User-Agent": "Mozilla/5.0 (voice-packs corpus builder)"}
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return resp.read().decode("utf-8", errors="replace")
+        except Exception as e:
+            if attempt == retries - 1:
+                print(f"  Failed to fetch {url}: {e}")
+                return None
+    return None
+
+
+def fetch_gutenberg(url: str) -> str | None:
+    """Fetch a Project Gutenberg text and strip header/footer."""
+    text = fetch_url(url)
+    if not text:
+        return None
+    start = text.find("*** START OF")
+    if start != -1:
+        start = text.find("\n", start) + 1
+    else:
+        start = 0
+    end = text.rfind("*** END OF")
+    if end == -1:
+        end = len(text)
+    cleaned = text[start:end].strip()
+    return cleaned if len(cleaned) > 1000 else None
+
+
+def ingest_urls(urls: list[str]) -> str:
+    """Download and concatenate text from a list of URLs.
+
+    Supports both raw URLs and Gutenberg URLs (auto-strips headers).
+    """
+    texts = []
+    for url in urls:
+        if "gutenberg.org" in url:
+            text = fetch_gutenberg(url)
+        else:
+            text = fetch_url(url)
+        if text:
+            texts.append(text)
+            print(f"  Downloaded: {len(text):,} chars from {url.split('/')[-1]}")
+    if not texts:
+        raise ValueError("No text could be downloaded from the provided URLs")
+    return "\n\n".join(texts)
 
 
 def ingest_directory(corpus_path: str) -> str:

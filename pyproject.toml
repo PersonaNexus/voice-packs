@@ -7,15 +7,15 @@ requires-python = ">=3.12"
 license = {text = "MIT"}
 keywords = ["lora", "personality", "voice", "mlx", "personanexus", "fine-tuning"]
 dependencies = [
-    "mlx-lm>=0.31.1",
-    "pyyaml>=6.0",
-    "safetensors>=0.4.0",
-    "huggingface-hub>=0.20.0",
+    "mlx-lm>=0.31.1,<1.0",
+    "pyyaml>=6.0,<7.0",
+    "safetensors>=0.4.0,<2.0",
+    "huggingface-hub>=0.20.0,<3.0",
 ]
 
 [project.optional-dependencies]
-serve = ["fastapi>=0.115.0", "uvicorn[standard]>=0.30.0"]
-demo = ["gradio>=5.0.0"]
+serve = ["fastapi>=0.115.0,<1.0", "uvicorn[standard]>=0.30.0,<1.0"]
+demo = ["gradio>=5.0.0,<6.0"]
 
 [project.scripts]
 voice-packs = "voice_packs.cli:main"
