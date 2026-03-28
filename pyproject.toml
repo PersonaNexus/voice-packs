@@ -1,12 +1,25 @@
 [project]
-name = "voice-pack-api"
+name = "voice-packs"
 version = "0.1.0"
-description = "PersonaNexus Voice Pack API Server — adapter-aware inference"
+description = "PersonaNexus Voice Packs — weight-level personality modules for language models"
 readme = "README.md"
 requires-python = ">=3.12"
+license = {text = "MIT"}
+keywords = ["lora", "personality", "voice", "mlx", "personanexus", "fine-tuning"]
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.30.0",
     "mlx-lm>=0.31.1",
     "pyyaml>=6.0",
+    "safetensors>=0.4.0",
+    "huggingface-hub>=0.20.0",
 ]
+
+[project.optional-dependencies]
+serve = ["fastapi>=0.115.0", "uvicorn[standard]>=0.30.0"]
+demo = ["gradio>=5.0.0"]
+
+[project.scripts]
+voice-packs = "voice_packs.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
