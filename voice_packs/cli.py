@@ -81,6 +81,28 @@ def cmd_serve(args):
     run_server(host=args.host, port=args.port)
 
 
+def cmd_audit(args):
+    """Audit voice packs: check assets, metadata, and registry consistency."""
+    import json as _json
+
+    from voice_packs.audit import generate_report, print_human_report
+
+    report = generate_report(
+        registry_path=args.registry,
+        repo_root=args.repo_root,
+    )
+
+    if args.json:
+        print(_json.dumps(report, indent=2))
+    else:
+        print_human_report(report)
+
+    if args.strict:
+        summary = report["summary"]
+        if summary["total_issues"] > 0 or summary["total_mismatches"] > 0:
+            raise SystemExit(1)
+
+
 def cmd_list(args):
     """List available pre-trained voice packs."""
     print("Pre-trained voice packs (download from HuggingFace):\n")
@@ -149,6 +171,15 @@ def main():
     p_serve.add_argument("--host", default="0.0.0.0", help="Server host")
     p_serve.add_argument("--port", type=int, default=8080, help="Server port")
 
+    # audit
+    _default_registry = os.path.join(os.path.dirname(os.path.dirname(__file__)), "registry.yaml")
+    _default_repo_root = os.path.dirname(os.path.dirname(__file__))
+    p_audit = sub.add_parser("audit", help="Audit voice packs (assets, metadata, registry)")
+    p_audit.add_argument("--json", action="store_true", help="Emit report as JSON")
+    p_audit.add_argument("--strict", action="store_true", help="Exit non-zero on issues or mismatches")
+    p_audit.add_argument("--registry", default=_default_registry, help="Path to registry.yaml")
+    p_audit.add_argument("--repo-root", default=_default_repo_root, help="Voice-packs repo root")
+
     # list
     sub.add_parser("list", help="List pre-trained voice packs")
 
@@ -162,6 +193,8 @@ def main():
         cmd_blend(args)
     elif args.command == "serve":
         cmd_serve(args)
+    elif args.command == "audit":
+        cmd_audit(args)
     elif args.command == "list":
         cmd_list(args)
     else:

@@ -121,13 +121,24 @@ interaction:
 Use the repo audit to see what is actually ready, what assets are missing, and whether `registry.yaml` still matches each pack's own metadata.
 
 ```bash
-# Human-readable audit
-python train_pack.py --report
+# Human-readable audit (CLI)
+voice-packs audit
 
 # Machine-readable output for tooling / CI
-python train_pack.py --report --json
+voice-packs audit --json
 
 # Fail fast if mismatches or missing required trained-pack assets are found
+voice-packs audit --strict
+
+# Point at a non-default registry or repo root
+voice-packs audit --registry /path/to/registry.yaml --repo-root /path/to/repo
+```
+
+The legacy `train_pack.py --report` interface still works and delegates to the same logic:
+
+```bash
+python train_pack.py --report
+python train_pack.py --report --json
 python train_pack.py --report --strict
 ```
 
