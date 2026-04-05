@@ -12,6 +12,7 @@ import yaml
 from voice_packs.audit import (
     build_pack_report,
     format_human_report,
+    format_status_summary,
     generate_report,
     load_yaml,
     safe_get,
@@ -260,6 +261,23 @@ class TestFormatHumanReport:
         assert "issues:   none" in text
 
 
+class TestFormatStatusSummary:
+    def test_pass_for_clean_repo(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        text = format_status_summary(report)
+        assert text.startswith("PASS |")
+        assert "issues=0" in text
+        assert "mismatches=0" in text
+
+    def test_fail_when_issues_exist(self, tmp_repo_mismatch):
+        repo_root, reg_path = tmp_repo_mismatch
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        text = format_status_summary(report)
+        assert text.startswith("FAIL |")
+        assert "mismatches=1" in text
+
+
 # ---------------------------------------------------------------------------
 # CLI integration tests
 # ---------------------------------------------------------------------------
@@ -285,6 +303,16 @@ class TestCLI:
         captured = capsys.readouterr()
         data = json.loads(captured.out)
         assert data["summary"]["total_packs"] == 2
+
+    def test_audit_summary(self, tmp_repo, capsys):
+        from voice_packs.cli import main
+        import sys
+
+        repo_root, reg_path = tmp_repo
+        sys.argv = ["voice-packs", "audit", "--summary", "--registry", reg_path, "--repo-root", str(repo_root)]
+        main()
+        captured = capsys.readouterr()
+        assert captured.out.strip().startswith("PASS |")
 
     def test_audit_strict_clean(self, tmp_repo):
         from voice_packs.cli import main

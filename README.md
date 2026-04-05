@@ -133,6 +133,9 @@ voice-packs audit
 # Machine-readable output for tooling / CI
 voice-packs audit --json
 
+# One-line PASS/WARN/FAIL summary for cron jobs or dashboards
+voice-packs audit --summary
+
 # Fail fast if mismatches or missing required trained-pack assets are found
 voice-packs audit --strict
 
