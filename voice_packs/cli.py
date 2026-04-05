@@ -104,7 +104,11 @@ def cmd_audit(args):
     """Audit voice packs: check assets, metadata, and registry consistency."""
     import json as _json
 
-    from voice_packs.audit import generate_report, print_human_report
+    from voice_packs.audit import (
+        format_status_summary,
+        generate_report,
+        print_human_report,
+    )
 
     report = generate_report(
         registry_path=args.registry,
@@ -113,6 +117,8 @@ def cmd_audit(args):
 
     if args.json:
         print(_json.dumps(report, indent=2))
+    elif args.summary:
+        print(format_status_summary(report))
     else:
         print_human_report(report)
 
@@ -195,6 +201,7 @@ def main():
     _default_repo_root = os.path.dirname(os.path.dirname(__file__))
     p_audit = sub.add_parser("audit", help="Audit voice packs (assets, metadata, registry)")
     p_audit.add_argument("--json", action="store_true", help="Emit report as JSON")
+    p_audit.add_argument("--summary", action="store_true", help="Emit a one-line PASS/WARN/FAIL summary")
     p_audit.add_argument("--strict", action="store_true", help="Exit non-zero on issues or mismatches")
     p_audit.add_argument("--registry", default=_default_registry, help="Path to registry.yaml")
     p_audit.add_argument("--repo-root", default=_default_repo_root, help="Voice-packs repo root")

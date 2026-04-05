@@ -169,6 +169,26 @@ def generate_report(
 # ---------------------------------------------------------------------------
 
 
+def format_status_summary(report: dict[str, Any]) -> str:
+    """Return a compact operational summary of the audit report."""
+    summary = report["summary"]
+    status = "PASS"
+    if summary["total_issues"] > 0:
+        status = "FAIL"
+    elif summary["total_mismatches"] > 0:
+        status = "WARN"
+
+    return (
+        f"{status} | "
+        f"packs={summary['total_packs']} "
+        f"trained={summary['trained_packs']} "
+        f"planned={summary['planned_packs']} "
+        f"issue_packs={summary['packs_with_issues']} "
+        f"issues={summary['total_issues']} "
+        f"mismatches={summary['total_mismatches']}"
+    )
+
+
 def format_human_report(report: dict[str, Any]) -> str:
     """Return the audit report as a human-readable string."""
     lines: list[str] = []
@@ -186,6 +206,7 @@ def format_human_report(report: dict[str, Any]) -> str:
         f"Health:       {summary['packs_with_issues']} packs with issues | "
         f"{summary['total_mismatches']} metadata mismatches"
     )
+    lines.append(f"Status:       {format_status_summary(report)}")
 
     for pack in report["packs"]:
         lines.append("")
