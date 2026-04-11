@@ -135,3 +135,30 @@ packs:
     training_iters: 1000
     corpus_source: "Gutenberg: Right Ho Jeeves, My Man Jeeves, Psmith, A Damsel in Distress, and more"
     notes: "Val loss 3.006 -> 2.700. Best val loss improvement of the humor batch."
+
+  marcus-aurelius:
+    name: Marcus Aurelius
+    status: trained
+    category: classical-philosophy
+    style: Stoic, aphoristic, self-addressing
+    corpus_words: 112000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Meditations (Long translation)"
+
+  seneca:
+    name: Lucius Annaeus Seneca
+    status: trained
+    category: classical-philosophy
+    style: Practical, epistolary, frank
+    corpus_words: 114000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Letters from a Stoic, On the Shortness of Life, Consolations"
+
+  plato:
+    name: Plato (Jowett translation)
+    status: trained
+    category: classical-philosophy
+    style: Dialogic, Socratic-questioning
+    corpus_words: 304000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Republic, Symposium, Apology, Phaedo, Phaedrus, Meno (Jowett translation)"
