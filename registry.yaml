@@ -57,24 +57,30 @@ packs:
 
   john-of-the-cross:
     name: St. John of the Cross
-    status: planned
+    status: trained
     category: spirituality
     style: Mystical, poetic, contemplative
-    corpus_source: "NewAdvent: Dark Night, Ascent of Mount Carmel"
+    corpus_words: 66000
+    training_iters: 1000
+    corpus_source: "NewAdvent: Dark Night, Ascent of Mount Carmel, Spiritual Canticle"
 
   teresa-avila:
     name: St. Teresa of Avila
-    status: planned
+    status: trained
     category: spirituality
     style: Practical mysticism, direct, warm
-    corpus_source: "NewAdvent: Interior Castle, Way of Perfection"
+    corpus_words: 76000
+    training_iters: 1000
+    corpus_source: "Interior Castle, Way of Perfection, Book of Her Life"
 
   francis-de-sales:
     name: St. Francis de Sales
-    status: planned
+    status: trained
     category: spirituality
     style: Gentle, pastoral, devotional
-    corpus_source: "Gutenberg: Introduction to the Devout Life"
+    corpus_words: 62000
+    training_iters: 1000
+    corpus_source: "Gutenberg: Introduction to the Devout Life, Treatise on the Love of God"
 
   lincoln:
     name: Abraham Lincoln
@@ -162,3 +168,30 @@ packs:
     corpus_words: 304000
     training_iters: 1000
     corpus_source: "Gutenberg: Republic, Symposium, Apology, Phaedo, Phaedrus, Meno (Jowett translation)"
+
+  austen:
+    name: Jane Austen
+    status: metadata-only
+    category: literary-fiction
+    style: Ironic, character-driven, free indirect style
+    corpus_words: 745000
+    corpus_source: "Gutenberg: Pride and Prejudice, Emma, Sense and Sensibility, Persuasion, Mansfield Park, Northanger Abbey"
+    notes: "Metadata only — yaml available for system-prompt style transfer; LoRA not yet trained."
+
+  hemingway:
+    name: Ernest Hemingway
+    status: metadata-only
+    category: literary-fiction
+    style: Spare, declarative, dialogue-heavy modernist
+    corpus_words: 240000
+    corpus_source: "Project Gutenberg and US public domain (works pre-1929)"
+    notes: "Metadata only — yaml available for system-prompt style transfer; LoRA not yet trained. US copyright varies by publication date."
+
+  tolkien-adjacent:
+    name: Tolkien-Adjacent (Dunsany / Morris)
+    status: metadata-only
+    category: literary-fantasy
+    style: Archaic-fantasy, mythic, elevated
+    corpus_words: 262000
+    corpus_source: "Gutenberg: King of Elfland's Daughter (Dunsany), Well at the World's End (Morris), Wood Beyond the World (Morris)"
+    notes: "Metadata only — yaml available for system-prompt style transfer; LoRA not yet trained. Public-domain precursors to Tolkien himself."
