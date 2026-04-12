@@ -139,6 +139,11 @@ voice-packs audit --summary
 # Fail fast if mismatches or missing required trained-pack assets are found
 voice-packs audit --strict
 
+# Narrow the report for ops workflows
+voice-packs audit --status trained
+voice-packs audit --issues-only --markdown
+voice-packs audit --status trained --issues-only --json
+
 # Point at a non-default registry or repo root
 voice-packs audit --registry /path/to/registry.yaml --repo-root /path/to/repo
 ```

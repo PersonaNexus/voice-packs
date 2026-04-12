@@ -135,6 +135,8 @@ def build_pack_report(
 def generate_report(
     registry_path: str = _DEFAULT_REGISTRY,
     repo_root: str = _DEFAULT_REPO_ROOT,
+    statuses: list[str] | None = None,
+    issues_only: bool = False,
 ) -> dict[str, Any]:
     """Generate a full audit report across all registered voice packs."""
     registry = load_registry(registry_path)
@@ -142,6 +144,12 @@ def generate_report(
         build_pack_report(name, pack, repo_root=repo_root)
         for name, pack in registry.get("packs", {}).items()
     ]
+    if statuses:
+        allowed = set(statuses)
+        packs = [p for p in packs if p["status"] in allowed]
+    if issues_only:
+        packs = [p for p in packs if p["issues"]]
+
     trained = [p for p in packs if p["status"] == "trained"]
     planned = [p for p in packs if p["status"] != "trained"]
     issue_count = sum(len(p["issues"]) for p in packs)
@@ -160,33 +168,74 @@ def generate_report(
             "total_issues": issue_count,
             "total_mismatches": mismatch_count,
         },
+        "status_summary": _build_status_summary(packs),
         "packs": packs,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Status summary / leaderboard layer
+# ---------------------------------------------------------------------------
+
+
+def _build_status_summary(packs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compute leaderboard rankings, issue buckets, and category splits.
+
+    Returned as a new top-level field so existing consumers are unaffected.
+    """
+    trained = [p for p in packs if p["status"] == "trained"]
+    planned = [p for p in packs if p["status"] != "trained"]
+
+    # --- Leaderboards (trained packs only, where metrics exist) ---
+    def _ranked(key: str, *, ascending: bool = True) -> list[dict[str, Any]]:
+        eligible = [
+            p for p in trained if p["metrics"].get(key) is not None
+        ]
+        eligible.sort(key=lambda p: p["metrics"][key], reverse=not ascending)
+        return [
+            {"id": p["id"], "display_name": p["display_name"], "value": p["metrics"][key]}
+            for p in eligible
+        ]
+
+    leaderboards = {
+        "vocab_richness_top": _ranked("vocab_richness", ascending=False),
+        "repetition_lowest": _ranked("repetition", ascending=True),
+    }
+
+    # --- Issue buckets ---
+    issue_buckets: dict[str, list[str]] = {}
+    for p in packs:
+        for issue in p["issues"]:
+            # Normalise to a bucket key (first two meaningful words)
+            if "missing required" in issue:
+                bucket = "missing_assets"
+            elif "mismatches" in issue:
+                bucket = "metadata_mismatch"
+            elif "no voice-pack.yaml" in issue:
+                bucket = "missing_metadata"
+            else:
+                bucket = "other"
+            issue_buckets.setdefault(bucket, []).append(p["id"])
+
+    # --- Category splits ---
+    def _category_split(pack_list: list[dict[str, Any]]) -> dict[str, list[str]]:
+        by_cat: dict[str, list[str]] = {}
+        for p in pack_list:
+            cat = p.get("category") or "uncategorized"
+            by_cat.setdefault(cat, []).append(p["id"])
+        return by_cat
+
+    return {
+        "leaderboards": leaderboards,
+        "issue_buckets": issue_buckets,
+        "trained_by_category": _category_split(trained),
+        "planned_by_category": _category_split(planned),
     }
 
 
 # ---------------------------------------------------------------------------
 # Human-readable output
 # ---------------------------------------------------------------------------
-
-
-def format_status_summary(report: dict[str, Any]) -> str:
-    """Return a compact operational summary of the audit report."""
-    summary = report["summary"]
-    status = "PASS"
-    if summary["total_issues"] > 0:
-        status = "FAIL"
-    elif summary["total_mismatches"] > 0:
-        status = "WARN"
-
-    return (
-        f"{status} | "
-        f"packs={summary['total_packs']} "
-        f"trained={summary['trained_packs']} "
-        f"planned={summary['planned_packs']} "
-        f"issue_packs={summary['packs_with_issues']} "
-        f"issues={summary['total_issues']} "
-        f"mismatches={summary['total_mismatches']}"
-    )
 
 
 def format_human_report(report: dict[str, Any]) -> str:
@@ -206,7 +255,6 @@ def format_human_report(report: dict[str, Any]) -> str:
         f"Health:       {summary['packs_with_issues']} packs with issues | "
         f"{summary['total_mismatches']} metadata mismatches"
     )
-    lines.append(f"Status:       {format_status_summary(report)}")
 
     for pack in report["packs"]:
         lines.append("")
@@ -247,3 +295,68 @@ def format_human_report(report: dict[str, Any]) -> str:
 def print_human_report(report: dict[str, Any]) -> None:
     """Print the human-readable report to stdout."""
     print(format_human_report(report))
+
+
+# ---------------------------------------------------------------------------
+# Markdown summary output
+# ---------------------------------------------------------------------------
+
+
+def format_markdown_summary(report: dict[str, Any]) -> str:
+    """Return a concise Markdown summary suitable for dashboards / morning review."""
+    lines: list[str] = []
+    summary = report["summary"]
+    ss = report.get("status_summary", {})
+
+    lines.append("# Voice Pack Audit Summary")
+    lines.append("")
+    lines.append(
+        f"**{summary['trained_packs']}** trained / "
+        f"**{summary['planned_packs']}** planned / "
+        f"**{summary['total_issues']}** issues"
+    )
+
+    # Leaderboards
+    leaderboards = ss.get("leaderboards", {})
+    vocab_top = leaderboards.get("vocab_richness_top", [])
+    rep_low = leaderboards.get("repetition_lowest", [])
+
+    if vocab_top:
+        lines.append("")
+        lines.append("## Vocab Richness (top)")
+        lines.append("")
+        lines.append("| Rank | Pack | Score |")
+        lines.append("|------|------|-------|")
+        for i, entry in enumerate(vocab_top[:5], 1):
+            lines.append(f"| {i} | {entry['display_name']} (`{entry['id']}`) | {entry['value']} |")
+
+    if rep_low:
+        lines.append("")
+        lines.append("## Lowest Repetition")
+        lines.append("")
+        lines.append("| Rank | Pack | Score |")
+        lines.append("|------|------|-------|")
+        for i, entry in enumerate(rep_low[:5], 1):
+            lines.append(f"| {i} | {entry['display_name']} (`{entry['id']}`) | {entry['value']} |")
+
+    # Issue buckets
+    issue_buckets = ss.get("issue_buckets", {})
+    if issue_buckets:
+        lines.append("")
+        lines.append("## Issue Buckets")
+        lines.append("")
+        for bucket, pack_ids in sorted(issue_buckets.items()):
+            lines.append(f"- **{bucket}**: {', '.join(sorted(set(pack_ids)))}")
+
+    # Category splits
+    for label, key in [("Trained", "trained_by_category"), ("Planned", "planned_by_category")]:
+        by_cat = ss.get(key, {})
+        if by_cat:
+            lines.append("")
+            lines.append(f"## {label} by Category")
+            lines.append("")
+            for cat, ids in sorted(by_cat.items()):
+                lines.append(f"- **{cat}**: {', '.join(ids)}")
+
+    lines.append("")
+    return "\n".join(lines)

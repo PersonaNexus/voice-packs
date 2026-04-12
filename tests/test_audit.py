@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
-import textwrap
 
 import pytest
 import yaml
@@ -12,7 +10,7 @@ import yaml
 from voice_packs.audit import (
     build_pack_report,
     format_human_report,
-    format_status_summary,
+    format_markdown_summary,
     generate_report,
     load_yaml,
     safe_get,
@@ -239,6 +237,142 @@ class TestGenerateReport:
         output = json.dumps(report)
         assert isinstance(json.loads(output), dict)
 
+    def test_status_filter(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(
+            registry_path=reg_path,
+            repo_root=str(repo_root),
+            statuses=["trained"],
+        )
+        assert report["summary"]["total_packs"] == 1
+        assert [pack["id"] for pack in report["packs"]] == ["alpha"]
+
+    def test_issues_only_filter(self, tmp_repo_mismatch):
+        repo_root, reg_path = tmp_repo_mismatch
+        report = generate_report(
+            registry_path=reg_path,
+            repo_root=str(repo_root),
+            issues_only=True,
+        )
+        assert report["summary"]["total_packs"] == 1
+        assert [pack["id"] for pack in report["packs"]] == ["gamma"]
+
+
+# ---------------------------------------------------------------------------
+# Integration tests — status_summary (leaderboards, buckets, category splits)
+# ---------------------------------------------------------------------------
+
+
+class TestStatusSummary:
+    def test_present_in_report(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        assert "status_summary" in report
+        ss = report["status_summary"]
+        assert "leaderboards" in ss
+        assert "issue_buckets" in ss
+        assert "trained_by_category" in ss
+        assert "planned_by_category" in ss
+
+    def test_leaderboard_ordering(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        ss = report["status_summary"]
+        vocab_top = ss["leaderboards"]["vocab_richness_top"]
+        # Only alpha has metrics in this fixture
+        assert len(vocab_top) == 1
+        assert vocab_top[0]["id"] == "alpha"
+        assert vocab_top[0]["value"] == 0.55
+
+    def test_category_splits(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        ss = report["status_summary"]
+        assert "philosophy" in ss["trained_by_category"]
+        assert "alpha" in ss["trained_by_category"]["philosophy"]
+        assert "fiction" in ss["planned_by_category"]
+        assert "beta" in ss["planned_by_category"]["fiction"]
+
+    def test_issue_buckets_on_mismatch(self, tmp_repo_mismatch):
+        repo_root, reg_path = tmp_repo_mismatch
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        ss = report["status_summary"]
+        assert "metadata_mismatch" in ss["issue_buckets"]
+        assert "gamma" in ss["issue_buckets"]["metadata_mismatch"]
+
+    def test_issue_buckets_missing_assets(self, tmp_path):
+        """Trained pack with no assets produces missing_assets + missing_metadata buckets."""
+        registry = {
+            "version": "0.1",
+            "base_model": "m",
+            "framework": "f",
+            "adapter_type": "a",
+            "packs": {
+                "empty": {"name": "Empty", "status": "trained", "category": "test"},
+            },
+        }
+        reg_path = tmp_path / "registry.yaml"
+        reg_path.write_text(yaml.dump(registry))
+        report = generate_report(registry_path=str(reg_path), repo_root=str(tmp_path))
+        buckets = report["status_summary"]["issue_buckets"]
+        assert "missing_assets" in buckets
+        assert "missing_metadata" in buckets
+
+    def test_clean_repo_empty_buckets(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        assert report["status_summary"]["issue_buckets"] == {}
+
+    def test_leaderboard_multi_packs(self, tmp_path):
+        """With two trained packs, leaderboards sort correctly."""
+        registry = {
+            "version": "0.1",
+            "base_model": "m",
+            "framework": "f",
+            "adapter_type": "a",
+            "packs": {
+                "low": {
+                    "name": "Low Rep",
+                    "status": "trained",
+                    "category": "a",
+                    "eval_repetition": 0.10,
+                    "eval_vocab_richness": 0.40,
+                },
+                "high": {
+                    "name": "High Vocab",
+                    "status": "trained",
+                    "category": "b",
+                    "eval_repetition": 0.30,
+                    "eval_vocab_richness": 0.70,
+                },
+            },
+        }
+        reg_path = tmp_path / "registry.yaml"
+        reg_path.write_text(yaml.dump(registry))
+        # Create minimal dirs so no missing-asset noise
+        for name in ("low", "high"):
+            d = tmp_path / name
+            (d / "adapters").mkdir(parents=True)
+            (d / "adapters" / "adapters.safetensors").write_bytes(b"\x00")
+            (d / "eval").mkdir()
+            (d / "eval" / "metrics.json").write_text("{}")
+            (d / "samples").mkdir()
+            (d / "samples" / "samples.md").write_text("")
+            (d / "voice-pack.yaml").write_text(yaml.dump({
+                "display_name": registry["packs"][name]["name"],
+                "status": "trained",
+                "category": registry["packs"][name]["category"],
+            }))
+
+        report = generate_report(registry_path=str(reg_path), repo_root=str(tmp_path))
+        lb = report["status_summary"]["leaderboards"]
+        # vocab richness: high first
+        assert lb["vocab_richness_top"][0]["id"] == "high"
+        assert lb["vocab_richness_top"][1]["id"] == "low"
+        # repetition: low first
+        assert lb["repetition_lowest"][0]["id"] == "low"
+        assert lb["repetition_lowest"][1]["id"] == "high"
+
 
 # ---------------------------------------------------------------------------
 # Integration tests — format_human_report
@@ -261,21 +395,43 @@ class TestFormatHumanReport:
         assert "issues:   none" in text
 
 
-class TestFormatStatusSummary:
-    def test_pass_for_clean_repo(self, tmp_repo):
+# ---------------------------------------------------------------------------
+# Integration tests — format_markdown_summary
+# ---------------------------------------------------------------------------
+
+
+class TestFormatMarkdownSummary:
+    def test_contains_header_and_counts(self, tmp_repo):
         repo_root, reg_path = tmp_repo
         report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
-        text = format_status_summary(report)
-        assert text.startswith("PASS |")
-        assert "issues=0" in text
-        assert "mismatches=0" in text
+        md = format_markdown_summary(report)
+        assert "# Voice Pack Audit Summary" in md
+        assert "**1** trained" in md
+        assert "**1** planned" in md
+        assert "**0** issues" in md
 
-    def test_fail_when_issues_exist(self, tmp_repo_mismatch):
+    def test_leaderboard_table(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        md = format_markdown_summary(report)
+        assert "## Vocab Richness (top)" in md
+        assert "`alpha`" in md
+
+    def test_category_sections(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
+        md = format_markdown_summary(report)
+        assert "## Trained by Category" in md
+        assert "**philosophy**" in md
+        assert "## Planned by Category" in md
+        assert "**fiction**" in md
+
+    def test_issue_buckets_shown(self, tmp_repo_mismatch):
         repo_root, reg_path = tmp_repo_mismatch
         report = generate_report(registry_path=reg_path, repo_root=str(repo_root))
-        text = format_status_summary(report)
-        assert text.startswith("FAIL |")
-        assert "mismatches=1" in text
+        md = format_markdown_summary(report)
+        assert "## Issue Buckets" in md
+        assert "metadata_mismatch" in md
 
 
 # ---------------------------------------------------------------------------
@@ -304,15 +460,28 @@ class TestCLI:
         data = json.loads(captured.out)
         assert data["summary"]["total_packs"] == 2
 
-    def test_audit_summary(self, tmp_repo, capsys):
+    def test_audit_markdown(self, tmp_repo, capsys):
         from voice_packs.cli import main
         import sys
 
         repo_root, reg_path = tmp_repo
-        sys.argv = ["voice-packs", "audit", "--summary", "--registry", reg_path, "--repo-root", str(repo_root)]
+        sys.argv = ["voice-packs", "audit", "--markdown", "--registry", reg_path, "--repo-root", str(repo_root)]
         main()
         captured = capsys.readouterr()
-        assert captured.out.strip().startswith("PASS |")
+        assert "# Voice Pack Audit Summary" in captured.out
+        assert "Vocab Richness" in captured.out
+
+    def test_audit_json_includes_status_summary(self, tmp_repo, capsys):
+        from voice_packs.cli import main
+        import sys
+
+        repo_root, reg_path = tmp_repo
+        sys.argv = ["voice-packs", "audit", "--json", "--registry", reg_path, "--repo-root", str(repo_root)]
+        main()
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert "status_summary" in data
+        assert "leaderboards" in data["status_summary"]
 
     def test_audit_strict_clean(self, tmp_repo):
         from voice_packs.cli import main
@@ -332,3 +501,33 @@ class TestCLI:
         with pytest.raises(SystemExit) as exc_info:
             main()
         assert exc_info.value.code == 1
+
+    def test_audit_status_filter(self, tmp_repo, capsys):
+        from voice_packs.cli import main
+        import sys
+
+        repo_root, reg_path = tmp_repo
+        sys.argv = [
+            "voice-packs", "audit", "--json", "--status", "trained",
+            "--registry", reg_path, "--repo-root", str(repo_root),
+        ]
+        main()
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["summary"]["total_packs"] == 1
+        assert [pack["id"] for pack in data["packs"]] == ["alpha"]
+
+    def test_audit_issues_only_filter(self, tmp_repo_mismatch, capsys):
+        from voice_packs.cli import main
+        import sys
+
+        repo_root, reg_path = tmp_repo_mismatch
+        sys.argv = [
+            "voice-packs", "audit", "--json", "--issues-only",
+            "--registry", reg_path, "--repo-root", str(repo_root),
+        ]
+        main()
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["summary"]["total_packs"] == 1
+        assert [pack["id"] for pack in data["packs"]] == ["gamma"]
