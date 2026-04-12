@@ -110,6 +110,7 @@ def cmd_audit(args):
         registry_path=args.registry,
         repo_root=args.repo_root,
         statuses=args.status,
+        status_group=args.status_group,
         issues_only=args.issues_only,
     )
 
@@ -201,7 +202,13 @@ def main():
     p_audit.add_argument("--json", action="store_true", help="Emit report as JSON")
     p_audit.add_argument("--markdown", action="store_true", help="Emit concise Markdown summary (leaderboards, issue buckets)")
     p_audit.add_argument("--strict", action="store_true", help="Exit non-zero on issues or mismatches")
-    p_audit.add_argument("--status", action="append", help="Filter to one or more exact pack statuses (repeatable)")
+    status_filters = p_audit.add_mutually_exclusive_group()
+    status_filters.add_argument("--status", action="append", help="Filter to one or more exact pack statuses (repeatable)")
+    status_filters.add_argument(
+        "--status-group",
+        choices=["ready", "pending"],
+        help="Filter by operational readiness group: ready or pending",
+    )
     p_audit.add_argument("--issues-only", action="store_true", help="Show only packs with issues")
     p_audit.add_argument("--registry", default=_default_registry, help="Path to registry.yaml")
     p_audit.add_argument("--repo-root", default=_default_repo_root, help="Voice-packs repo root")

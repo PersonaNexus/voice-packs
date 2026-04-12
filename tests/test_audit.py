@@ -8,6 +8,7 @@ import pytest
 import yaml
 
 from voice_packs.audit import (
+    STATUS_GROUPS,
     build_pack_report,
     format_human_report,
     format_markdown_summary,
@@ -256,6 +257,46 @@ class TestGenerateReport:
         )
         assert report["summary"]["total_packs"] == 1
         assert [pack["id"] for pack in report["packs"]] == ["gamma"]
+
+    def test_status_group_ready_filter(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(
+            registry_path=reg_path,
+            repo_root=str(repo_root),
+            status_group="ready",
+        )
+        assert report["summary"]["total_packs"] == 1
+        assert [pack["id"] for pack in report["packs"]] == ["alpha"]
+
+    def test_status_group_pending_filter(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        report = generate_report(
+            registry_path=reg_path,
+            repo_root=str(repo_root),
+            status_group="pending",
+        )
+        assert report["summary"]["total_packs"] == 1
+        assert [pack["id"] for pack in report["packs"]] == ["beta"]
+
+    def test_status_group_and_status_conflict(self, tmp_repo):
+        repo_root, reg_path = tmp_repo
+        with pytest.raises(ValueError, match="Supply statuses or status_group"):
+            generate_report(
+                registry_path=reg_path,
+                repo_root=str(repo_root),
+                statuses=["trained"],
+                status_group="ready",
+            )
+
+
+# ---------------------------------------------------------------------------
+# Unit tests — STATUS_GROUPS
+# ---------------------------------------------------------------------------
+
+
+class TestStatusGroups:
+    def test_groups_defined(self):
+        assert STATUS_GROUPS == {"ready": ["trained"], "pending": ["planned"]}
 
 
 # ---------------------------------------------------------------------------
@@ -531,3 +572,18 @@ class TestCLI:
         data = json.loads(captured.out)
         assert data["summary"]["total_packs"] == 1
         assert [pack["id"] for pack in data["packs"]] == ["gamma"]
+
+    def test_audit_status_group_filter(self, tmp_repo, capsys):
+        from voice_packs.cli import main
+        import sys
+
+        repo_root, reg_path = tmp_repo
+        sys.argv = [
+            "voice-packs", "audit", "--json", "--status-group", "ready",
+            "--registry", reg_path, "--repo-root", str(repo_root),
+        ]
+        main()
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["summary"]["total_packs"] == 1
+        assert [pack["id"] for pack in data["packs"]] == ["alpha"]

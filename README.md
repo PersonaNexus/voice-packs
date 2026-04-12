@@ -141,12 +141,18 @@ voice-packs audit --strict
 
 # Narrow the report for ops workflows
 voice-packs audit --status trained
+voice-packs audit --status-group ready --markdown
+voice-packs audit --status-group pending --json
 voice-packs audit --issues-only --markdown
 voice-packs audit --status trained --issues-only --json
 
 # Point at a non-default registry or repo root
 voice-packs audit --registry /path/to/registry.yaml --repo-root /path/to/repo
 ```
+
+`--status-group` is the higher-level operational filter:
+- `ready` = `trained`
+- `pending` = `planned`
 
 The legacy `train_pack.py --report` interface still works and delegates to the same logic:
 

@@ -25,6 +25,12 @@ _DEFAULT_REGISTRY = os.path.join(
 )
 _DEFAULT_REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 
+# Maps operational group names to exact status values.
+STATUS_GROUPS: dict[str, list[str]] = {
+    "ready": ["trained"],
+    "pending": ["planned"],
+}
+
 
 def load_yaml(path: str) -> dict[str, Any]:
     """Load a YAML file safely."""
@@ -136,9 +142,21 @@ def generate_report(
     registry_path: str = _DEFAULT_REGISTRY,
     repo_root: str = _DEFAULT_REPO_ROOT,
     statuses: list[str] | None = None,
+    status_group: str | None = None,
     issues_only: bool = False,
 ) -> dict[str, Any]:
     """Generate a full audit report across all registered voice packs."""
+    if statuses and status_group:
+        raise ValueError("Supply statuses or status_group, not both.")
+
+    if status_group:
+        statuses = STATUS_GROUPS.get(status_group)
+        if statuses is None:
+            valid = ", ".join(sorted(STATUS_GROUPS))
+            raise ValueError(
+                f"Unknown status group {status_group!r}. Valid groups: {valid}"
+            )
+
     registry = load_registry(registry_path)
     packs = [
         build_pack_report(name, pack, repo_root=repo_root)
